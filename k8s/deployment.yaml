@@ -1,0 +1,24 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: careconnect-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: careconnect-backend
+  template:
+    metadata:
+      labels:
+        app: careconnect-backend
+    spec:
+      containers:
+        - name: careconnect-backend
+          image: careconnect-backend:jenkins
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 5000
+          envFrom:
+            - secretRef:
+                name: careconnect-secrets
