@@ -1,348 +1,435 @@
-// ========================================
-// CareConnect - Symptom Checker
-// ========================================
+// ============================================
+// CARECONNECT - FRONTEND JAVASCRIPT
+// Kubernetes Backend API Configuration
+// ============================================
+
+const API_URL = "http://127.0.0.1:5002/api";
+
+// ============================================
+// PAGE LOAD
+// ============================================
+
+document.addEventListener("DOMContentLoaded", function() {
+    loadDoctors();
+
+    const symptomForm = document.getElementById("symptomForm");
+
+    if (symptomForm) {
+        symptomForm.addEventListener("submit", analyzeSymptoms);
+    }
+
+    const appointmentForm =
+        document.getElementById("appointmentForm") ||
+        document.getElementById("appointment");
+
+    if (appointmentForm) {
+        appointmentForm.addEventListener("submit", bookAppointment);
+    }
+});
+
+// ============================================
+// 1. LOAD DOCTORS
+// ============================================
+
+async function loadDoctors() {
+    const doctorList = document.getElementById("doctorList");
+    const doctorSelect = document.getElementById("selectedDoctor");
+
+    try {
+        if (doctorList) {
+            doctorList.innerHTML = "<p>Loading doctors...</p>";
+        }
+
+        const response = await fetch(`${API_URL}/doctors`);
+
+        if (!response.ok) {
+            throw new Error("Doctors API returned an error.");
+        }
+
+        const data = await response.json();
+
+        if (!Array.isArray(data.doctors)) {
+            throw new Error("Invalid doctors response from server.");
+        }
+
+        const doctors = data.doctors;
+
+        // Display doctor cards
+        if (doctorList) {
+            doctorList.innerHTML = "";
+
+            doctors.forEach(function(doctor) {
+                const card = document.createElement("div");
+                card.className = "doctor-card";
+
+                card.innerHTML = `
+                    <h3>${doctor.name}</h3>
+                    <p>${doctor.department}</p>
+                    <p>${doctor.qualification || "Qualification not available"}</p>
+
+                    <button type="button"
+                        onclick="selectDoctor(${doctor.id})">
+                        Book Appointment
+                    </button>
+                `;
+
+                doctorList.appendChild(card);
+            });
+        }
+
+        // Populate appointment dropdown
+        if (doctorSelect) {
+            doctorSelect.innerHTML =
+                '<option value="">Select Doctor</option>';
+
+            doctors.forEach(function(doctor) {
+                const option = document.createElement("option");
+
+                option.value = doctor.id;
+                option.textContent =
+                    doctor.name + " - " + doctor.department;
+
+                doctorSelect.appendChild(option);
+            });
+        }
+
+        console.log("Doctors loaded successfully:", doctors);
+
+    } catch (error) {
+        console.error("Doctor loading error:", error);
+
+        if (doctorList) {
+            doctorList.innerHTML =
+                "<p>Unable to load doctors. Please check the backend connection.</p>";
+        }
+    }
+}
+
+// ============================================
+// 2. SELECT DOCTOR
+// ============================================
+
+function selectDoctor(doctorId) {
+    const doctorSelect = document.getElementById("selectedDoctor");
+
+    if (doctorSelect) {
+        doctorSelect.value = String(doctorId);
+    }
+
+    const appointmentSection =
+        document.getElementById("appointment");
+
+    if (appointmentSection) {
+        appointmentSection.scrollIntoView({
+            behavior: "smooth"
+        });
+    }
+}
+
+// ============================================
+// 3. OPEN SYMPTOM CHECKER
+// ============================================
 
 function openSymptomChecker() {
+    const symptomMessage =
+        document.getElementById("symptomMessage");
 
-    const message = document.getElementById("symptomMessage");
+    if (!symptomMessage) {
+        console.error("Symptom message section not found.");
+        return;
+    }
 
-    message.innerHTML = `
-        <div class="symptom-box">
-            <h3>Select Your Symptoms</h3>
+    symptomMessage.innerHTML = `
+        <form id="symptomForm">
 
-            <form id="symptomForm">
-                <label><input type="checkbox" name="symptoms" value="fever"> Fever</label>
-                <label><input type="checkbox" name="symptoms" value="headache"> Headache</label>
-                <label><input type="checkbox" name="symptoms" value="cough"> Cough</label>
-                <label><input type="checkbox" name="symptoms" value="stomach pain"> Stomach Pain</label>
-                <label><input type="checkbox" name="symptoms" value="skin rash"> Skin Rash</label>
-                <label><input type="checkbox" name="symptoms" value="chest pain"> Chest Pain</label>
-                <label><input type="checkbox" name="symptoms" value="breathing difficulty"> Breathing Difficulty</label>
+            <h3>Select your symptoms</h3>
 
-                <br>
-                <button type="submit" class="primary-button">
-                    Analyze Symptoms
-                </button>
-            </form>
+            <label>
+                <input type="checkbox" name="symptoms" value="Fever">
+                Fever
+            </label><br>
 
-            <div id="result"></div>
-        </div>
+            <label>
+                <input type="checkbox" name="symptoms" value="Headache">
+                Headache
+            </label><br>
+
+            <label>
+                <input type="checkbox" name="symptoms" value="Cough">
+                Cough
+            </label><br>
+
+            <label>
+                <input type="checkbox" name="symptoms" value="Stomach pain">
+                Stomach pain
+            </label><br>
+
+            <label>
+                <input type="checkbox" name="symptoms" value="Skin problem">
+                Skin problem
+            </label><br>
+
+            <label>
+                <input type="checkbox" name="symptoms" value="Chest pain">
+                Chest pain
+            </label><br>
+
+            <label>
+                <input type="checkbox" name="symptoms" value="Breathing difficulty">
+                Breathing difficulty
+            </label><br><br>
+
+            <button type="submit">Analyze Symptoms</button>
+
+        </form>
+
+        <div id="result"></div>
     `;
 
     document.getElementById("symptomForm")
         .addEventListener("submit", analyzeSymptoms);
 }
 
+// ============================================
+// 4. ANALYZE SYMPTOMS
+// ============================================
 
 async function analyzeSymptoms(event) {
-
     event.preventDefault();
 
     const selectedSymptoms = Array.from(
-        document.querySelectorAll('input[name="symptoms"]:checked')
-    ).map(input => input.value);
+        document.querySelectorAll(
+            'input[name="symptoms"]:checked'
+        )
+    ).map(function(input) {
+        return input.value;
+    });
 
     const result = document.getElementById("result");
 
     if (selectedSymptoms.length === 0) {
-        result.innerHTML = "<p>Please select at least one symptom.</p>";
+        if (result) {
+            result.textContent =
+                "Please select at least one symptom.";
+        }
         return;
     }
 
-    if (
-        selectedSymptoms.includes("chest pain") ||
-        selectedSymptoms.includes("breathing difficulty")
-    ) {
-        result.innerHTML = `
-            <h3>Urgent Medical Attention</h3>
-            <p>
-                Chest pain or breathing difficulty can be serious.
-                Seek immediate medical attention or contact local
-                emergency services. Do not wait for an automated
-                recommendation.
-            </p>
-        `;
+    // Emergency symptom check
+    const urgentSymptoms = [
+        "chest pain",
+        "breathing difficulty"
+    ];
+
+    const normalizedSymptoms = selectedSymptoms.map(function(symptom) {
+        return symptom.toLowerCase().trim();
+    });
+
+    const needsUrgentCare = normalizedSymptoms.some(function(symptom) {
+        return urgentSymptoms.includes(symptom);
+    });
+
+    if (needsUrgentCare) {
+        if (result) {
+            result.innerHTML = `
+                <h3>Urgent Medical Attention</h3>
+                <p>
+                    Chest pain or breathing difficulty can be serious.
+                    Please seek emergency medical care immediately.
+                </p>
+            `;
+        }
         return;
     }
 
     try {
+        if (result) {
+            result.textContent = "Analyzing your symptoms...";
+        }
 
         const response = await fetch(
-            "http://127.0.0.1:5000/api/symptoms/analyze", {
+            `${API_URL}/symptoms/analyze`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    symptoms: selectedSymptoms
+                    symptoms: normalizedSymptoms
                 })
             }
         );
 
         const data = await response.json();
 
-        if (!response.ok) {
-            throw new Error(data.error || "Symptom analysis failed");
+        if (!response.ok || data.status !== "success") {
+            throw new Error(
+                data.message || "Symptom analysis failed."
+            );
         }
 
-        result.innerHTML = `
-            <div class="result-card">
-                <h3>Symptom Analysis Completed</h3>
+        const department =
+            data.department ||
+            data.suggested_department ||
+            "Please consult a doctor";
 
-                <p><strong>Selected Symptoms:</strong>
-                    ${data.selected_symptoms.join(", ")}
+        if (result) {
+            result.innerHTML = `
+                <h3>Symptom Analysis Result</h3>
+
+                <p>
+                    ${data.message ||
+                    "Symptom analysis completed successfully."}
                 </p>
 
-                <p><strong>Suggested Department:</strong>
-                    ${data.suggested_department}
+                <p>
+                    Suggested Department:
+                    <strong>${department}</strong>
                 </p>
 
-                <p>${data.disclaimer}</p>
-            </div>
-        `;
+                <p>
+                    <small>
+                        This is an educational suggestion,
+                        not a medical diagnosis.
+                    </small>
+                </p>
+            `;
+        }
 
     } catch (error) {
-        result.innerHTML = `<p>${error.message}</p>`;
+        console.error("Symptom analysis error:", error);
+
+        if (result) {
+            result.textContent =
+                error.message ||
+                "Unable to analyze symptoms. Please try again.";
+        }
     }
 }
 
+// ============================================
+// 5. BOOK APPOINTMENT
+// ============================================
 
-// ========================================
-// CareConnect - Doctors from MySQL
-// ========================================
+async function bookAppointment(event) {
+    event.preventDefault();
 
-let doctors = [];
+    const patientName =
+        document.getElementById("patientName").value.trim();
 
-async function displayDoctors() {
+    const patientPhone =
+        document.getElementById("patientPhone").value.trim();
 
-    const doctorList = document.getElementById("doctorList");
-    const doctorSelect = document.getElementById("selectedDoctor");
+    const doctorId =
+        document.getElementById("selectedDoctor").value;
 
-    if (!doctorList || !doctorSelect) return;
+    const appointmentDate =
+        document.getElementById("appointmentDate").value;
 
-    doctorList.innerHTML = "<p>Loading doctors...</p>";
+    const appointmentTime =
+        document.getElementById("appointmentTime").value;
+
+    const bookingResult =
+        document.getElementById("bookingResult");
+
+    if (!patientName ||
+        !patientPhone ||
+        !doctorId ||
+        !appointmentDate ||
+        !appointmentTime
+    ) {
+        if (bookingResult) {
+            bookingResult.textContent =
+                "Please fill in all appointment details.";
+        }
+        return;
+    }
+
+    // Validate phone number
+    if (!/^[0-9]{10}$/.test(patientPhone)) {
+        if (bookingResult) {
+            bookingResult.textContent =
+                "Please enter a valid 10-digit phone number.";
+        }
+        return;
+    }
+
+    // Validate appointment date and time
+    const selectedDateTime = new Date(
+        `${appointmentDate}T${appointmentTime}`
+    );
+
+    if (selectedDateTime <= new Date()) {
+        if (bookingResult) {
+            bookingResult.textContent =
+                "Please select a future appointment date and time.";
+        }
+        return;
+    }
+
+    const appointmentData = {
+        patient_name: patientName,
+        patient_phone: patientPhone,
+        doctor_id: Number(doctorId),
+        appointment_date: appointmentDate,
+        appointment_time: appointmentTime
+    };
 
     try {
+        if (bookingResult) {
+            bookingResult.textContent =
+                "Booking your appointment...";
+        }
 
         const response = await fetch(
-            "http://127.0.0.1:5000/api/doctors"
+            `${API_URL}/appointments`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(appointmentData)
+            }
         );
 
         const data = await response.json();
 
         if (!response.ok || data.status !== "success") {
-            throw new Error(data.message || "Unable to load doctors");
+            throw new Error(
+                data.message || "Appointment booking failed."
+            );
         }
 
-        doctors = data.doctors;
+        if (bookingResult) {
+            bookingResult.innerHTML = `
+                <h3>Appointment Request Successful!</h3>
 
-        doctorList.innerHTML = "";
+                <p>
+                    ${data.message ||
+                    "Your appointment has been booked."}
+                </p>
 
-        doctorSelect.innerHTML =
-            '<option value="">Select Doctor</option>';
+                <p>
+                    Appointment ID:
+                    <strong>
+                        ${data.appointment_id || data.id || "Confirmed"}
+                    </strong>
+                </p>
 
-        doctors.forEach(doctor => {
-
-            doctorList.innerHTML += `
-                <div class="doctor-card">
-                    <div class="doctor-icon">👨‍⚕️</div>
-
-                    <h3>${doctor.name}</h3>
-                    <p>${doctor.department}</p>
-                    <p>${doctor.qualification || ""}</p>
-
-                    <button class="primary-button"
-                        onclick="selectDoctor(${doctor.id})">
-                        Book Appointment
-                    </button>
-                </div>
+                <p>
+                    Status: ${data.status || "Pending"}
+                </p>
             `;
-
-            doctorSelect.innerHTML += `
-                <option value="${doctor.id}">
-                    ${doctor.name} - ${doctor.department}
-                </option>
-            `;
-
-        });
+        }
 
     } catch (error) {
+        console.error("Appointment booking error:", error);
 
-        doctorList.innerHTML =
-            `<p>Unable to load doctors: ${error.message}</p>`;
-
+        if (bookingResult) {
+            bookingResult.textContent =
+                error.message || "Unable to book appointment.";
+        }
     }
 }
 
-
-// ========================================
-// Select Doctor
-// ========================================
-
-function selectDoctor(doctorId) {
-
-    const doctorSelect = document.getElementById("selectedDoctor");
-
-    doctorSelect.value = String(doctorId);
-
-    document.getElementById("appointment")
-        .scrollIntoView({ behavior: "smooth" });
-
-}
-
-
-// ========================================
-// Book Appointment - Save to MySQL
-// ========================================
-
-const appointmentForm =
-    document.getElementById("appointmentForm");
-
-if (appointmentForm) {
-
-    appointmentForm.addEventListener("submit", async function(event) {
-
-        event.preventDefault();
-
-        const patientName =
-            document.getElementById("patientName").value.trim();
-
-        const patientPhone =
-            document.getElementById("patientPhone").value.trim();
-
-        const doctorId =
-            Number(document.getElementById("selectedDoctor").value);
-
-        const appointmentDate =
-            document.getElementById("appointmentDate").value;
-
-        const appointmentTime =
-            document.getElementById("appointmentTime").value;
-
-        const result =
-            document.getElementById("bookingResult");
-
-        const doctor = doctors.find(item => item.id === doctorId);
-
-        if (!patientName || !patientPhone || !doctor ||
-            !appointmentDate || !appointmentTime) {
-
-            result.innerHTML =
-                "<p>Please fill in all appointment details.</p>";
-
-            return;
-        }
-
-        if (!/^[0-9]{10}$/.test(patientPhone)) {
-
-            result.innerHTML =
-                "<p>Please enter a valid 10-digit mobile number.</p>";
-
-            return;
-        }
-
-        const selectedDateTime = new Date(
-            appointmentDate + "T" + appointmentTime
-        );
-
-        if (selectedDateTime <= new Date()) {
-
-            result.innerHTML =
-                "<p>Please select a future appointment date and time.</p>";
-
-            return;
-        }
-
-        result.innerHTML = "<p>Booking your appointment...</p>";
-
-        try {
-
-            const response = await fetch(
-                "http://127.0.0.1:5000/api/appointments", {
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-
-                    body: JSON.stringify({
-                        patient_name: patientName,
-                        patient_phone: patientPhone,
-                        doctor_id: doctorId,
-                        appointment_date: appointmentDate,
-                        appointment_time: appointmentTime
-                    })
-                }
-            );
-
-            const data = await response.json();
-
-            if (!response.ok || data.status !== "success") {
-                throw new Error(
-                    data.message || "Appointment booking failed"
-                );
-            }
-
-            const appointment = data.appointment;
-
-            result.innerHTML = `
-                <div class="result-card">
-
-                    <h3>Appointment Booked Successfully!</h3>
-
-                    <p><strong>Appointment ID:</strong>
-                        ${appointment.appointment_id}
-                    </p>
-
-                    <p><strong>Patient:</strong>
-                        ${appointment.patient_name}
-                    </p>
-
-                    <p><strong>Doctor:</strong>
-                        ${appointment.doctor_name}
-                    </p>
-
-                    <p><strong>Department:</strong>
-                        ${appointment.department}
-                    </p>
-
-                    <p><strong>Date:</strong>
-                        ${appointment.appointment_date}
-                    </p>
-
-                    <p><strong>Time:</strong>
-                        ${appointment.appointment_time}
-                    </p>
-
-                    <p><strong>Status:</strong>
-                        ${appointment.status}
-                    </p>
-
-                    <p>Your appointment request has been saved successfully.</p>
-
-                </div>
-            `;
-
-            this.reset();
-
-        } catch (error) {
-
-            result.innerHTML = `
-                <div class="result-card">
-                    <h3>Booking Failed</h3>
-                    <p>${error.message}</p>
-                </div>
-            `;
-
-        }
-
-    });
-
-}
-
-
-// ========================================
-// Load Doctors When Page Opens
-// ========================================
-
-displayDoctors();
+// ============================================
+// END OF CARECONNECT JAVASCRIPT
+// ============================================
