@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareConnect - Patient Registration</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #eaf4f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            width: 350px;
+            box-shadow: 0 4px 15px #0002;
+        }
+        
+        h2 {
+            text-align: center;
+            color: #087e8b;
+        }
+        
+        input,
+        select,
+        button {
+            width: 100%;
+            padding: 12px;
+            margin: 9px 0;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+        
+        button {
+            background: #087e8b;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        button:hover {
+            background: #05636d;
+        }
+        
+        #message {
+            text-align: center;
+            margin-top: 12px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h2>CareConnect</h2>
+        <h3>Patient Registration</h3>
+
+        <form id="registerForm">
+
+            <input type="text" id="full_name" placeholder="Full Name" required>
+
+            <input type="email" id="email" placeholder="Email Address" required>
+
+            <input type="tel" id="phone" placeholder="Phone Number">
+
+            <input type="number" id="age" placeholder="Age" min="1" max="120">
+
+            <select id="gender">
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+            </select>
+
+            <input type="password" id="password" placeholder="Create Password" minlength="8" required>
+
+            <button type="submit">Register</button>
+
+        </form>
+
+        <p id="message"></p>
+
+    </div>
+
+    <script>
+        document.getElementById("registerForm")
+            .addEventListener("submit", async function(event) {
+
+                event.preventDefault();
+
+                const patient = {
+                    full_name: document.getElementById("full_name").value,
+                    email: document.getElementById("email").value,
+                    phone: document.getElementById("phone").value,
+                    age: document.getElementById("age").value ?
+                        Number(document.getElementById("age").value) : null,
+                    gender: document.getElementById("gender").value,
+                    password: document.getElementById("password").value
+                };
+
+                const message = document.getElementById("message");
+
+                try {
+
+                    const response = await fetch(
+                        "http://127.0.0.1:5000/api/patients/register", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify(patient)
+                        }
+                    );
+
+                    const result = await response.json();
+
+                    message.textContent = result.message || result.error;
+
+                    if (response.ok) {
+                        message.style.color = "green";
+                        document.getElementById("registerForm").reset();
+                    } else {
+                        message.style.color = "red";
+                    }
+
+                } catch (error) {
+
+                    message.textContent = "Unable to connect to server.";
+                    message.style.color = "red";
+
+                }
+
+            });
+    </script>
+
+</body>
+
+</html>

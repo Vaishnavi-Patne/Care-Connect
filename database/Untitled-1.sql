@@ -1,0 +1,3 @@
+USE careconnect;
+
+DESCRIBE patients;

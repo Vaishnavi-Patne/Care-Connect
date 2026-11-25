@@ -1,0 +1,406 @@
+/* General Styling */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+    scroll-behavior: smooth;
+}
+
+body {
+    background-color: #f5f9fc;
+    color: #263746;
+}
+
+
+/* Navigation Bar */
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 8%;
+    background-color: white;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+.logo {
+    font-size: 27px;
+    font-weight: bold;
+    color: #087f8c;
+}
+
+.logo span {
+    color: #263746;
+}
+
+.nav-links {
+    display: flex;
+    list-style: none;
+    gap: 28px;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: #263746;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.nav-links a:hover {
+    color: #087f8c;
+}
+
+.nav-button {
+    background-color: #087f8c;
+    color: white;
+    padding: 12px 22px;
+    border-radius: 7px;
+    text-decoration: none;
+}
+
+
+/* Hero Section */
+
+.hero {
+    min-height: 480px;
+    padding: 80px 8%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 40px;
+    background: linear-gradient(120deg, #e5f7f8, #f5f9fc);
+}
+
+.hero-content {
+    max-width: 600px;
+}
+
+.tagline {
+    color: #087f8c;
+    font-weight: bold;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+}
+
+.hero h1 {
+    font-size: 52px;
+    line-height: 1.2;
+    margin-bottom: 20px;
+}
+
+.hero h1 span {
+    color: #087f8c;
+}
+
+.hero-content>p:not(.tagline) {
+    line-height: 1.8;
+    color: #62717d;
+    margin-bottom: 30px;
+}
+
+.primary-button {
+    display: inline-block;
+    background-color: #087f8c;
+    color: white;
+    padding: 14px 24px;
+    border-radius: 7px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+.primary-button:hover,
+.nav-button:hover {
+    background-color: #06636d;
+}
+
+
+/* Hero Illustration */
+
+.hero-image {
+    width: 360px;
+    min-height: 270px;
+    background-color: white;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.08);
+    padding: 25px;
+}
+
+.medical-icon {
+    font-size: 75px;
+    color: #087f8c;
+    margin-bottom: 15px;
+}
+
+.hero-image h2 {
+    color: #087f8c;
+    margin-bottom: 10px;
+}
+
+
+/* Services */
+
+.services {
+    padding: 75px 8%;
+    text-align: center;
+}
+
+.services h2,
+.symptoms h2,
+.doctors h2 {
+    font-size: 32px;
+    margin-bottom: 15px;
+}
+
+.section-description {
+    color: #71808c;
+    margin-bottom: 40px;
+}
+
+.service-container {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    flex-wrap: wrap;
+}
+
+.service-card {
+    background: white;
+    width: 280px;
+    padding: 35px 25px;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+    transition: 0.3s;
+}
+
+.service-card:hover {
+    transform: translateY(-8px);
+}
+
+.service-icon {
+    font-size: 45px;
+    margin-bottom: 20px;
+}
+
+.service-card h3 {
+    margin-bottom: 15px;
+    color: #087f8c;
+}
+
+.service-card p {
+    color: #71808c;
+    line-height: 1.7;
+}
+
+
+/* Symptoms Section */
+
+.symptoms {
+    background-color: #e5f7f8;
+    text-align: center;
+    padding: 75px 8%;
+}
+
+.symptoms p,
+.doctors p {
+    color: #71808c;
+    margin-bottom: 25px;
+}
+
+
+/* Doctors Section */
+
+.doctors {
+    padding: 75px 8%;
+    text-align: center;
+}
+
+
+/* Footer */
+
+footer {
+    background-color: #173b46;
+    color: white;
+    text-align: center;
+    padding: 35px 15px;
+}
+
+footer h2 {
+    margin-bottom: 12px;
+}
+
+footer p {
+    margin-top: 10px;
+    color: #d3e3e7;
+}
+
+
+/* Mobile Responsive */
+
+@media (max-width: 768px) {
+    .navbar {
+        flex-direction: column;
+        gap: 20px;
+    }
+    .nav-links {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 15px;
+    }
+    .hero {
+        flex-direction: column;
+        text-align: center;
+        padding: 55px 6%;
+    }
+    .hero h1 {
+        font-size: 38px;
+    }
+    .hero-image {
+        width: 100%;
+    }
+    .service-card {
+        width: 100%;
+    }
+}
+
+
+/* Symptom Checker Form */
+
+.symptom-box {
+    max-width: 600px;
+    margin: 35px auto 0;
+    padding: 30px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.07);
+    text-align: left;
+}
+
+.symptom-box h3 {
+    margin-bottom: 20px;
+    color: #087f8c;
+}
+
+.symptom-box label {
+    display: block;
+    margin-bottom: 15px;
+    cursor: pointer;
+}
+
+.symptom-box input {
+    margin-right: 10px;
+    accent-color: #087f8c;
+}
+
+.symptom-box button {
+    margin-top: 15px;
+}
+
+.result-card {
+    margin-top: 25px;
+    padding: 20px;
+    background: #e5f7f8;
+    border-radius: 10px;
+    line-height: 1.8;
+}
+
+.result-card h3 {
+    color: #087f8c;
+}
+
+
+/* Doctor Listing */
+
+.doctor-container {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 25px;
+    margin-top: 35px;
+}
+
+.doctor-card {
+    background: white;
+    width: 260px;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
+    transition: 0.3s;
+}
+
+.doctor-card:hover {
+    transform: translateY(-6px);
+}
+
+.doctor-icon {
+    font-size: 50px;
+    margin-bottom: 15px;
+}
+
+.doctor-card h3 {
+    color: #087f8c;
+    margin-bottom: 12px;
+}
+
+.doctor-card p {
+    margin-bottom: 12px;
+    color: #71808c;
+}
+
+
+/* Appointment Form */
+
+.appointment {
+    padding: 75px 8%;
+    background: #e5f7f8;
+    text-align: center;
+}
+
+.appointment h2 {
+    margin-bottom: 15px;
+    font-size: 32px;
+}
+
+.appointment>p {
+    margin-bottom: 30px;
+    color: #71808c;
+}
+
+#appointmentForm {
+    max-width: 500px;
+    margin: auto;
+    padding: 30px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
+}
+
+#appointmentForm input,
+#appointmentForm select {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    margin-bottom: 18px;
+    border: 1px solid #d5e0e5;
+    border-radius: 7px;
+    font-size: 15px;
+}
+
+#appointmentForm input:focus,
+#appointmentForm select:focus {
+    outline: 2px solid #087f8c;
+}
+
+#bookingResult {
+    max-width: 500px;
+    margin: 25px auto 0;
+    text-align: left;
+}
