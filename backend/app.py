@@ -12,10 +12,11 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from database.db_config import get_db_connection
 
 
-# Load environment variables from .env
+# Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app)
 
 
 # --------------------------------
@@ -44,8 +45,6 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
 
-CORS(app)
-
 
 # --------------------------------
 # Home API
@@ -54,6 +53,7 @@ CORS(app)
 @app.route("/", methods=["GET"])
 def home():
     return jsonify({
+        "application": "CareConnect",
         "message": "Welcome to CareConnect Healthcare Platform",
         "status": "Backend is running successfully"
     }), 200
@@ -74,6 +74,7 @@ def health_check():
 
 # --------------------------------
 # Patient Registration API
+# Database: careconnect
 # --------------------------------
 
 @app.route("/api/patients/register", methods=["POST"])
@@ -90,12 +91,14 @@ def register_patient():
 
     if not all([full_name, email, password]):
         return jsonify({
-            "error": "Name, email and password are required"
+            "status": "error",
+            "message": "Name, email and password are required"
         }), 400
 
     if len(password) < 8:
         return jsonify({
-            "error": "Password must contain at least 8 characters"
+            "status": "error",
+            "message": "Password must contain at least 8 characters"
         }), 400
 
     password_hash = generate_password_hash(password)
@@ -130,7 +133,8 @@ def register_patient():
         db.session.rollback()
 
         return jsonify({
-            "error": str(e)
+            "status": "error",
+            "message": str(e)
         }), 500
 
 
@@ -148,7 +152,8 @@ def login_patient():
 
     if not email or not password:
         return jsonify({
-            "error": "Email and password are required"
+            "status": "error",
+            "message": "Email and password are required"
         }), 400
 
     try:
@@ -163,14 +168,16 @@ def login_patient():
 
         if not patient or not patient["password_hash"]:
             return jsonify({
-                "error": "Invalid email or password"
+                "status": "error",
+                "message": "Invalid email or password"
             }), 401
 
         if not check_password_hash(
             patient["password_hash"], password
         ):
             return jsonify({
-                "error": "Invalid email or password"
+                "status": "error",
+                "message": "Invalid email or password"
             }), 401
 
         return jsonify({
@@ -185,7 +192,8 @@ def login_patient():
 
     except Exception as e:
         return jsonify({
-            "error": str(e)
+            "status": "error",
+            "message": str(e)
         }), 500
 
 
@@ -286,10 +294,13 @@ def book_appointment():
     try:
         cursor = connection.cursor(dictionary=True)
 
-        # Verify that the selected doctor exists
+        # Verify selected doctor
         cursor.execute(
-            "SELECT doctor_id, doctor_name, department "
-            "FROM doctors WHERE doctor_id = %s",
+            """
+            SELECT doctor_id, doctor_name, department
+            FROM doctors
+            WHERE doctor_id = %s
+            """,
             (doctor_id,)
         )
 
@@ -316,8 +327,13 @@ def book_appointment():
         cursor.execute(
             """
             INSERT INTO appointments
-            (patient_id, doctor_id, appointment_date,
-             appointment_time, status)
+            (
+                patient_id,
+                doctor_id,
+                appointment_date,
+                appointment_time,
+                status
+            )
             VALUES (%s, %s, %s, %s, %s)
             """,
             (
@@ -333,19 +349,22 @@ def book_appointment():
 
         connection.commit()
 
+        appointment_details = {
+            "appointment_id": appointment_id,
+            "patient_id": patient_id,
+            "patient_name": patient_name,
+            "doctor_name": doctor["doctor_name"],
+            "department": doctor["department"],
+            "appointment_date": str(appointment_date),
+            "appointment_time": str(appointment_time),
+            "status": "Pending"
+        }
+
         return jsonify({
             "status": "success",
             "message": "Appointment booked successfully",
-            "appointment": {
-                "appointment_id": appointment_id,
-                "patient_id": patient_id,
-                "patient_name": patient_name,
-                "doctor_name": doctor["doctor_name"],
-                "department": doctor["department"],
-                "appointment_date": str(appointment_date),
-                "appointment_time": str(appointment_time),
-                "status": "Pending"
-            }
+            "appointment_id": appointment_id,
+            "appointment": appointment_details
         }), 201
 
     except Exception as e:
@@ -376,8 +395,37 @@ def analyze_symptoms():
 
     if not isinstance(symptoms, list):
         return jsonify({
-            "error": "Symptoms must be provided as a list"
+            "status": "error",
+            "message": "Symptoms must be provided as a list"
         }), 400
+
+    if not symptoms:
+        return jsonify({
+            "status": "error",
+            "message": "Please select at least one symptom"
+        }), 400
+
+    # Convert user input to lowercase
+    # and handle alternative symptom names
+    symptom_aliases = {
+        "skin problem": "skin rash"
+    }
+
+    normalized_symptoms = []
+
+    for symptom in symptoms:
+
+        if not isinstance(symptom, str):
+            return jsonify({
+                "status": "error",
+                "message": "Invalid symptom selection"
+            }), 400
+
+        symptom = symptom.strip().lower()
+
+        symptom = symptom_aliases.get(symptom, symptom)
+
+        normalized_symptoms.append(symptom)
 
     allowed_symptoms = {
         "fever",
@@ -389,22 +437,19 @@ def analyze_symptoms():
         "breathing difficulty"
     }
 
-    if not symptoms:
-        return jsonify({
-            "error": "Please select at least one symptom"
-        }), 400
-
     if not all(
-        isinstance(symptom, str) and symptom in allowed_symptoms
-        for symptom in symptoms
+        symptom in allowed_symptoms
+        for symptom in normalized_symptoms
     ):
         return jsonify({
-            "error": "Invalid symptom selection"
+            "status": "error",
+            "message": "Invalid symptom selection"
         }), 400
 
+    # Emergency symptom warning
     if (
-        "chest pain" in symptoms
-        or "breathing difficulty" in symptoms
+        "chest pain" in normalized_symptoms
+        or "breathing difficulty" in normalized_symptoms
     ):
         return jsonify({
             "status": "urgent",
@@ -414,20 +459,23 @@ def analyze_symptoms():
             )
         }), 200
 
+    # Rule-based department suggestion
     department = "General Medicine"
 
-    if "skin rash" in symptoms:
+    if "skin rash" in normalized_symptoms:
         department = "Dermatology"
 
-    elif "stomach pain" in symptoms:
+    elif "stomach pain" in normalized_symptoms:
         department = "Gastroenterology"
 
-    elif "headache" in symptoms:
+    elif "headache" in normalized_symptoms:
         department = "Neurology"
 
     return jsonify({
         "status": "success",
-        "selected_symptoms": symptoms,
+        "message": "Symptom analysis completed successfully",
+        "selected_symptoms": normalized_symptoms,
+        "department": department,
         "suggested_department": department,
         "disclaimer": (
             "This is an educational rule-based suggestion, "
